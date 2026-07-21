@@ -4,6 +4,11 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Alpine ships without OpenSSL — Prisma's query/schema engine binaries need
+# it to detect the correct engine variant at `generate` time. Without this,
+# Prisma silently guesses wrong and the engine fails to start at runtime.
+RUN apk add --no-cache openssl
+
 COPY package.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/backend/package.json packages/backend/package.json
@@ -19,6 +24,10 @@ RUN npm run build --workspace=@interdex/backend
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+
+# Same reason as the builder stage: the engine binary needs OpenSSL present
+# at runtime, not just at generate time.
+RUN apk add --no-cache openssl
 
 COPY package.json ./
 COPY packages/shared/package.json packages/shared/package.json

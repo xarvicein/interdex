@@ -1,0 +1,19 @@
+{
+  "name": "interdex",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=@interdex/backend",
+    "dev:frontend": "npm run dev --workspace=@interdex/frontend",
+    "build:shared": "npm run build --workspace=@interdex/shared",
+    "build:backend": "npm run build --workspace=@interdex/backend",
+    "build:frontend": "npm run build --workspace=@interdex/frontend",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "prisma:generate": "npm run prisma:generate --workspace=@interdex/backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@interdex/backend",
+    "prisma:seed": "npm run prisma:seed --workspace=@interdex/backend"
+  }
+}

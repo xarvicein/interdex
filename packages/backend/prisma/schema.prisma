@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AnswerContentType {
+  TEXT
+  CODE
+  BOTH
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String?
+  name         String
+  avatarUrl    String?
+  role         Role         @default(USER)
+  authProvider AuthProvider @default(LOCAL)
+  googleId     String?      @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  refreshTokens     RefreshToken[]
+  questions         Question[] @relation("QuestionAuthor")
+  reviewedQuestions Question[] @relation("QuestionReviewer")
+  answers           Answer[]   @relation("AnswerAuthor")
+  reviewedAnswers   Answer[]   @relation("AnswerReviewer")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  icon        String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  questions   Question[]
+
+  @@map("categories")
+}
+
+model Question {
+  id         String       @id @default(uuid())
+  title      String
+  prompt     String
+  categoryId String
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  difficulty Difficulty   @default(MEDIUM)
+  tags       String[]     @default([])
+  status     ReviewStatus @default(PENDING)
+
+  createdById String
+  createdBy   User    @relation("QuestionAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("QuestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote   String?
+  reviewedAt   DateTime?
+
+  answers   Answer[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([difficulty])
+  @@map("questions")
+}
+
+model Answer {
+  id           String            @id @default(uuid())
+  questionId   String
+  question     Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  contentType  AnswerContentType @default(TEXT)
+  textContent  String?
+  codeContent  String?
+  codeLanguage String?
+  status       ReviewStatus      @default(PENDING)
+
+  createdById String
+  createdBy   User   @relation("AnswerAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?     @relation("AnswerReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote   String?
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([questionId])
+  @@index([status])
+  @@map("answers")
+}

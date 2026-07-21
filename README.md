@@ -71,6 +71,8 @@ This starts:
 - `backend` on `:4000` — runs `prisma migrate deploy` automatically on container start
 - `frontend` on `:5173` — nginx serving the production Vite build
 
+**Deploying on Dokploy/Coolify**: neither service binds a host port (see the `expose:` comments in `docker-compose.yml`) — the platform's own reverse proxy routes to them over the internal Docker network instead, so configure the domain → container port mapping in its dashboard. Both services also join an external `dokploy-network` so they can reach a Postgres instance created via the platform's own "Database" resource (which lives on that shared network, not the isolated network Compose creates by default for this project). If your platform names that shared network differently, update the `networks:` block at the bottom of `docker-compose.yml` to match — check with `docker network ls` on the host.
+
 Run the seed once (from your host, against the same `DATABASE_URL`):
 
 ```bash

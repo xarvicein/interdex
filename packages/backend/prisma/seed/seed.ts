@@ -1,6 +1,6 @@
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { PrismaClient, ReviewStatus, Role, AuthProvider } from "@prisma/client";
-import { hashPassword } from "../../src/utils/password";
 import { pythonSeed } from "./data/python";
 import { sqlSeed } from "./data/sql";
 import { typescriptSeed } from "./data/typescript";
@@ -31,7 +31,7 @@ async function ensureSeedAdmin() {
     data: {
       email,
       name: "InterDex Admin",
-      passwordHash: await hashPassword(password),
+      passwordHash: await bcrypt.hash(password, 12),
       role: Role.ADMIN,
       authProvider: AuthProvider.LOCAL,
     },
